@@ -103,6 +103,13 @@
     .word-list-summary::before { content: "▸"; color: var(--teal); font-size: 12px; transition: transform .15s ease; }
     .word-list-details[open] .word-list-summary::before { transform: rotate(90deg); }
     .word-list-summary:hover { background: var(--mint); }
+    .question-details { margin-top: 4px; }
+    .question-summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #b9ceca; border-radius: 12px; background: var(--mint-light); color: var(--teal-dark); font-weight: 750; font-size: 13px; }
+    .question-summary::-webkit-details-marker { display: none; }
+    .question-summary::before { content: "▸"; color: var(--teal); font-size: 12px; transition: transform .15s ease; }
+    .question-details[open] .question-summary::before { transform: rotate(90deg); }
+    .question-summary:hover { background: var(--mint); }
+    .question-details .table-scroll { margin-top: 14px; }
     .word-list-panel { margin-top: 18px; }
     .word-list-panel-heading { align-items: flex-start; gap: 20px; margin-bottom: 4px; }
     .word-list-panel-heading .setup-intro { margin: 0; max-width: 760px; }
@@ -113,10 +120,11 @@
     .word-row:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(31, 119, 118, .1); }
     .word-row.error { border-color: #d59a94; background: #fff8f6; }
     .row-number { color: #90a09e; font-size: 12px; font-weight: 800; }
-    .word-input, .word-select, .language-input, .within-sentence-select { border: 1px solid var(--line); outline: 0; width: 100%; min-height: 40px; border-radius: 8px; padding: 8px 10px; color: var(--ink); background: white; }
+    .word-input, .word-select, .language-input { border: 1px solid var(--line); outline: 0; width: 100%; min-height: 40px; border-radius: 8px; padding: 8px 10px; color: var(--ink); background: white; }
     .word-input { font-weight: 650; }
-    .word-input:focus, .word-select:focus, .language-input:focus, .within-sentence-select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(31,119,118,.1); }
+    .word-input:focus, .word-select:focus, .language-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(31,119,118,.1); }
     .language-input:disabled { background: #eef1ef; border-color: #e1e6e3; color: #9ba6a3; cursor: not-allowed; }
+    .word-input[readonly], .word-select:disabled { background: #eef1ef; border-color: #e1e6e3; color: #55635f; cursor: not-allowed; }
     input::placeholder, textarea::placeholder { color: #a3afac; font-weight: 400; }
     .inline-error { grid-column: 2 / 6; color: var(--danger); font-size: 12px; }
     .remove-button { border: 0; border-radius: 8px; width: 34px; height: 34px; background: transparent; color: #7b8e8d; font-size: 21px; }
@@ -139,6 +147,8 @@
     tbody tr:nth-child(even) td, tbody tr:nth-child(even) th { background: #fbfcf9; }
     tbody th em { color: #a2adab; font-style: normal; font-weight: 400; }
     .invalid td, .invalid th { background: #fff5f3 !important; }
+    .na-locked td, .na-locked th { opacity: .5; }
+    .na-locked .context-badge { opacity: 1; }
     .voice-question-table td.invalid, .voice-question-table th.invalid { background: #fff5f3 !important; }
     .table-error { display: block; margin-top: 6px; color: var(--danger); font-size: 11px; line-height: 1.3; font-weight: 650; }
     .choice { width: 100%; min-height: 30px; display: grid; place-items: center; cursor: pointer; }
@@ -206,7 +216,7 @@
       .question-number { flex-basis: 36px; width: 36px; height: 36px; }
       .word-columns { display: none; }
       .word-row { grid-template-columns: 30px minmax(0, 1fr) 34px; align-items: start; }
-      .word-row .word-input, .word-row .word-select, .word-row .language-input, .word-row .within-sentence-select { grid-column: 2; }
+      .word-row .word-input, .word-row .word-select, .word-row .language-input, .word-row .word-row-placement { grid-column: 2; }
       .word-row .remove-button { grid-column: 3; grid-row: 1; }
       .inline-error { grid-column: 2; }
       .submit-panel { align-items: stretch; flex-direction: column; }
@@ -272,7 +282,7 @@
       </section>
 
       <div class="loaded-list-banner" aria-live="polite">
-        <div><strong id="loaded-word-summary">English US list loaded: 61 words (122 test rows)</strong><span>Most words are loaded once standalone and once within a sentence.</span></div>
+        <div><strong id="loaded-word-summary">English US list loaded: 61 words (122 test rows)</strong><span>Most words are loaded twice; once as standalone and once within a sentence.</span></div>
         <a class="jump-link" id="jump-to-word-list" href="#word-list-section">View the loaded words ↓</a>
       </div>
 
@@ -284,7 +294,7 @@
 
       <section class="card words-card" id="voice-roster-section">
         <div class="heading">
-          <div><span class="label">Voice list</span><h2>Voices to review</h2><p class="setup-intro">The initial voices change with the selected language. You can edit the test entries now and add the complete voice lists when they are available.</p></div>
+          <div><span class="label">Voice list</span><h2>Voices to review</h2><p class="setup-intro">The initial voices are placeholders that change with the selected language. Edit them now with the real voice details, or replace them once the full voice roster is available.</p></div>
           <button class="add-button" id="add-voice" type="button">＋ Add voice</button>
         </div>
         <div class="table-scroll"><table class="voice-list-table" id="voice-list-table"></table></div>
@@ -309,7 +319,7 @@
       <section class="card question" data-question-group="Custom Voice Support">
         <div class="heading question-heading">
           <div class="question-number">2</div>
-          <div><span class="label">Question 2 · Custom Voice Support</span><h2>Does the voice generated match with the voice selected?</h2><p>Evaluate whether the generated output matches the selected voice in identity, tone, accent and overall character.</p></div>
+          <div><span class="label">Question 2 · Custom Voice Support</span><h2>Does the generated voice match the voice selected?</h2><p>Evaluate whether the generated output matches the selected voice in identity, tone, accent and overall character.</p></div>
         </div>
         <div class="table-scroll"><table class="voice-question-table" id="voice-match-table"></table></div>
       </section>
@@ -327,7 +337,10 @@
           <div class="question-number">4</div>
           <div><span class="label">Question 4 · Custom Voice Support</span><h2>Add any additional information regarding this feature.</h2><p>Add voice-specific observations, limitations or useful context. This answer is optional.</p></div>
         </div>
-        <div class="table-scroll"><table class="voice-question-table" id="voice-notes-table"></table></div>
+        <details class="question-details">
+          <summary class="question-summary">View / answer this question</summary>
+          <div class="table-scroll"><table class="voice-question-table" id="voice-notes-table"></table></div>
+        </details>
       </section>
 
       <section class="card feature-intro pronunciation-intro">
@@ -338,16 +351,16 @@
 
       <section class="card words-card" id="word-list-section">
         <div class="heading">
-          <div><span class="label">Word list</span><h2>Words to review</h2><p class="setup-intro">The initial words change with the selected language. Test every word twice: once standalone (<strong>Within sentence: No</strong>) and once within a sentence (<strong>Within sentence: Yes</strong>) to identify any pronunciation differences. For the contextual version, test the word in at least two different sentences. Classify every word and provide its original language only when <strong>Foreign word</strong> is selected. A few entries that are already complete sentences (like "He goes on a tear across town") are tested once only, marked <strong>N/A</strong>.</p><p id="word-count" class="setup-intro"><strong>English US: 61 words loaded, creating 122 test rows.</strong></p></div>
+          <div><span class="label">Word list</span><h2>Words to review</h2><p class="setup-intro">Each word is tested twice — once standalone and once within a sentence — so you can compare pronunciation in both contexts. Words are classified as Common, Foreign, Name, or Acronym/Letters. Feel free to add more words to the list below.</p><p id="word-count" class="setup-intro"><strong>English US: 61 words loaded, creating 122 test rows.</strong></p></div>
         </div>
         <details class="word-list-details" id="word-list-details">
-          <summary class="word-list-summary">View the full word list, edit a word's classification, or add / remove one</summary>
+          <summary class="word-list-summary">View the full word list, add a new word, or remove one</summary>
           <div class="word-list-panel">
             <div class="heading word-list-panel-heading">
-              <p class="setup-intro">This list loads automatically for the selected language, so most reviewers won't need to change anything here. Edit the Word, Type or Original language fields directly if something needs fixing, or use <strong>Add word</strong> / the × button to add or remove one.</p>
+              <p class="setup-intro">Use <strong>Add word</strong> to add a new, fully editable word, or the × button to remove any row.</p>
               <button class="add-button" id="add-word" type="button">＋ Add word</button>
             </div>
-            <div class="word-columns"><span></span><span>Word</span><span>Type</span><span>Original language</span><span>Within sentence</span><span></span></div>
+            <div class="word-columns"><span></span><span>Word</span><span>Type</span><span>Original language</span><span>Placement</span><span></span></div>
             <div class="word-list" id="word-list"></div>
           </div>
         </details>
@@ -364,7 +377,7 @@
       <section class="card question" data-question-group="Pronunciation">
         <div class="heading question-heading">
           <div class="question-number">6</div>
-          <div><span class="label">Question 6 · Pronunciation</span><h2>If no, did an alternate spelling, recording function or IPA help?</h2><p>Test each relevant adjustment and regenerate the word at least 5–10 times after the change. Select every method that helped. For each word, you must enter both the number of attempts and the time needed before the pronunciation was acceptable. Include only the time spent getting the pronunciation right, not the total job time.</p></div>
+          <div><span class="label">Question 6 · Pronunciation</span><h2>If it wasn't correct 100% of the time, did an alternate spelling, recording function or IPA help?</h2><p>Test each relevant adjustment and regenerate the word at least 5–10 times after the change. Select every method that helped. For each word, you must enter both the number of attempts and the time needed before the pronunciation was acceptable. Include only the time spent getting the pronunciation right, not the total job time.</p></div>
         </div>
         <div class="table-scroll"><table id="method-table"></table></div>
       </section>
@@ -372,7 +385,7 @@
       <section class="card question" data-question-group="Pronunciation">
         <div class="heading question-heading">
           <div class="question-number">7</div>
-          <div><span class="label">Question 7 · Pronunciation</span><h2>If a given spelling change produces the desired result, can it be applied to other instances?</h2><p>Select whether the successful spelling change can also be used for other instances. Select N/A if no spelling change was used.</p></div>
+          <div><span class="label">Question 7 · Pronunciation</span><h2>If a given spelling change produces the desired result, can it be applied to other instances?</h2><p>Select whether the successful spelling change also works in other sentences, with different voices, or under different emotional deliveries.</p></div>
         </div>
         <div class="table-scroll"><table id="spelling-table"></table></div>
       </section>
@@ -390,7 +403,10 @@
           <div class="question-number">9</div>
           <div><span class="label">Question 9 · Pronunciation</span><h2>Please add any notes or comments associated with this word's pronunciation, if needed.</h2><p>After completing at least 5–10 regenerations, record any recurring errors, useful spellings, IPA changes or other observations. Notes are optional.</p></div>
         </div>
-        <div class="table-scroll notes-table"><table id="notes-table"></table></div>
+        <details class="question-details">
+          <summary class="question-summary">View / add notes</summary>
+          <div class="table-scroll notes-table"><table id="notes-table"></table></div>
+        </details>
       </section>
 
       <div class="submit-panel">
@@ -413,7 +429,7 @@
     (function () {
       "use strict";
 
-      const pronunciationOptions = ["100% of the time", "80–90% of the time", "50–70% of the time", "30–40% of the time", "10–20% of the time", "No"];
+      const pronunciationOptions = ["100% of the time", "80–90% of the time", "50–70% of the time", "30–40% of the time", "10–20% of the time", "0% - never"];
       const consistencyOptions = ["100% of the time", "80–90% of the time", "50–70% of the time", "30–40% of the time", "10–20% of the time", "N/A"];
       const methodOptions = ["IPA", "Alternate spelling", "Recording tool", "Nothing worked", "N/A"];
       const exclusiveMethods = ["Nothing worked", "N/A"];
@@ -424,7 +440,7 @@
         "Performs some styles well but has significant limitations",
         "Has very limited performance flexibility",
         "Cannot perform different performance styles convincingly",
-        "Not available",
+        "N/A",
         "Not Applicable"
       ];
       const voiceQualityOptions = [
@@ -439,7 +455,7 @@
       const voicePerformanceOptions = ["Neutral delivery", "Moderate emotion", "Extreme emotion", "Yelling or shouting", "Whispering", "Non-verbal vocalisations", "None of the above", "Not Applicable", "Sobbing or Crying", "Other"];
       const exclusiveVoicePerformanceOptions = ["None of the above", "Not Applicable"];
       const genderOptions = ["Female", "Male"];
-      const wordTypes = ["Common word", "Foreign word", "Name", "Hard to pronounce word"];
+      const wordTypes = ["Common word", "Foreign word", "Name", "Acronym/Letters"];
       const languageVoiceLists = {
         "English US": Array.from({ length: 8 }, function (_, index) { return { name: "Voice " + (index + 1) + " English", ovLanguage: "English", gender: index < 4 ? "Female" : "Male" }; }),
         "Spanish (Latin American)": Array.from({ length: 8 }, function (_, index) { return { name: "Voice " + (index + 1) + " Spanish", ovLanguage: "Spanish", gender: index < 4 ? "Female" : "Male" }; })
@@ -462,7 +478,7 @@
           { word: "Refuse", type: "Common word" },
           { word: "M.L. Preston Motors", type: "Common word" },
           { word: "Schiphol", type: "Foreign word", originalLanguage: "Dutch" },
-          { word: "LTD", type: "Common word" },
+          { word: "LTD", type: "Acronym/Letters" },
           { word: "He goes on a tear across town", type: "Common word", single: true },
           { word: "Marvel Studios and Netflix presents", type: "Common word", single: true },
           { word: "Audio", type: "Common word" },
@@ -478,19 +494,19 @@
           { word: "live action", type: "Common word" },
           { word: "Read", type: "Common word" },
           { word: "Semi-auto pistol", type: "Common word" },
-          { word: "AKA", type: "Common word" },
+          { word: "AKA", type: "Acronym/Letters" },
           { word: "Gargantuan", type: "Common word" },
           { word: "Bow", type: "Common word" },
           { word: "Mobile", type: "Common word" },
           { word: "Slow Dance", type: "Common word" },
-          { word: "MD", type: "Common word" },
+          { word: "MD", type: "Acronym/Letters" },
           { word: "Record", type: "Common word" },
           { word: "Ji-An", type: "Foreign word", originalLanguage: "KOR" },
           { word: "Jeong-min", type: "Foreign word", originalLanguage: "KOR" },
           { word: "Jin-Man", type: "Foreign word", originalLanguage: "KOR" },
-          { word: "AT-AT", type: "Common word" },
+          { word: "AT-AT", type: "Acronym/Letters" },
           { word: "Jeong Jian", type: "Foreign word", originalLanguage: "KOR" },
-          { word: "R2 D2", type: "Common word" },
+          { word: "R2 D2", type: "Acronym/Letters" },
           { word: "Bea", type: "Foreign word", originalLanguage: "KOR" },
           { word: "Lawal", type: "Foreign word", originalLanguage: "GER" },
           { word: "Fabian", type: "Foreign word", originalLanguage: "GER" },
@@ -502,10 +518,10 @@
           { word: "Prager", type: "Foreign word", originalLanguage: "GER" },
           { word: "Thyra", type: "Foreign word", originalLanguage: "GER" },
           { word: "Farrah", type: "Foreign word", originalLanguage: "GER" },
-          { word: "DG", type: "Common word" },
+          { word: "DG", type: "Acronym/Letters" },
           { word: "Disney+", type: "Common word" },
           { word: "Annabeth", type: "Common word" },
-          { word: "D.U.M.E", type: "Common word" },
+          { word: "D.U.M.E", type: "Acronym/Letters" },
           { word: "Antithesis", type: "Common word" },
           { word: "Theatre", type: "Foreign word", originalLanguage: "French" }
         ],
@@ -543,7 +559,7 @@
       const project = { language: "English US", service: "", tool: "" };
       let voices = [newVoice("", "", "")];
       let voiceErrors = {};
-      let reviews = newReviewPair({ word: "", type: "", originalLanguage: "" });
+      let reviews = newReviewPair({ word: "", type: "", originalLanguage: "" }, true);
       let errors = {};
       let lastDownloadUrl = "";
 
@@ -551,25 +567,25 @@
         return window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
       }
 
-      function newReview(word, type, originalLanguage, withinSentence, pairId) {
-        return { id: uid(), pairId: pairId || uid(), word: word || "", type: type || "", originalLanguage: originalLanguage || "", withinSentence: withinSentence || "", pronunciation: "", methods: [], other: "", attempts: "", timeMinutes: "", spellingApplicability: "", consistency: "", notes: "" };
+      function newReview(word, type, originalLanguage, withinSentence, pairId, custom) {
+        return { id: uid(), pairId: pairId || uid(), word: word || "", type: type || "", originalLanguage: originalLanguage || "", withinSentence: withinSentence || "", custom: Boolean(custom), pronunciation: "", methods: [], other: "", attempts: "", timeMinutes: "", spellingApplicability: "", consistency: "", notes: "" };
       }
 
-      function newReviewPair(item) {
+      function newReviewPair(item, custom) {
         const pairId = uid();
         return [
-          newReview(item.word, item.type, item.originalLanguage, "No", pairId),
-          newReview(item.word, item.type, item.originalLanguage, "Yes", pairId)
+          newReview(item.word, item.type, item.originalLanguage, "No", pairId, custom),
+          newReview(item.word, item.type, item.originalLanguage, "Yes", pairId, custom)
         ];
       }
 
-      function newReviewSingle(item) {
+      function newReviewSingle(item, custom) {
         const pairId = uid();
-        return [newReview(item.word, item.type, item.originalLanguage, "N/A", pairId)];
+        return [newReview(item.word, item.type, item.originalLanguage, "N/A", pairId, custom)];
       }
 
-      function newReviewEntry(item) {
-        return item.single ? newReviewSingle(item) : newReviewPair(item);
+      function newReviewEntry(item, custom) {
+        return item.single ? newReviewSingle(item, custom) : newReviewPair(item, custom);
       }
 
       function newVoice(name, ovLanguage, gender) {
@@ -682,6 +698,17 @@
         return review.word.trim() ? escapeHtml(review.word.trim()) : "<em>Untitled</em>";
       }
 
+      function placementLabel(value) {
+        if (value === "Yes") return "Within Sentence";
+        if (value === "No") return "Standalone word";
+        if (value === "N/A") return "N/A";
+        return "";
+      }
+
+      function isExtremePronunciation(value) {
+        return value === "100% of the time" || value === "0% - never";
+      }
+
       function errorArea(message) {
         if (!message) return "";
         if (message === "Add a word" || message === "Choose a word type" || message.indexOf("original language") !== -1 || message.indexOf("within a sentence") !== -1) return "words";
@@ -709,14 +736,13 @@
           return '<div class="word-row ' + (wordError ? "error" : "") + '" data-row-id="' + review.id + '">' +
             '<span class="row-number">' + String(index + 1).padStart(2, "0") + '</span>' +
             '<label class="sr-only" for="word-' + review.id + '">Word ' + (index + 1) + '</label>' +
-            '<input class="word-input" id="word-' + review.id + '" data-field="word" data-id="' + review.id + '" value="' + escapeHtml(review.word) + '" placeholder="Enter a word">' +
+            '<input class="word-input" id="word-' + review.id + '" data-field="word" data-id="' + review.id + '" value="' + escapeHtml(review.word) + '" placeholder="Enter a word" ' + (review.custom ? "" : "readonly") + '>' +
             '<label class="sr-only" for="type-' + review.id + '">Type for ' + escapeHtml(review.word || "word " + (index + 1)) + '</label>' +
-            '<select class="word-select" id="type-' + review.id + '" data-field="type" data-id="' + review.id + '"><option value="">Select type…</option>' + wordTypes.map(function (type) { return '<option value="' + escapeHtml(type) + '" ' + (review.type === type ? "selected" : "") + '>' + escapeHtml(type) + '</option>'; }).join("") + '</select>' +
+            '<select class="word-select" id="type-' + review.id + '" data-field="type" data-id="' + review.id + '" ' + (review.custom ? "" : "disabled") + '><option value="">Select type…</option>' + wordTypes.map(function (type) { return '<option value="' + escapeHtml(type) + '" ' + (review.type === type ? "selected" : "") + '>' + escapeHtml(type) + '</option>'; }).join("") + '</select>' +
             '<label class="sr-only" for="language-' + review.id + '">Original language for ' + escapeHtml(review.word || "word " + (index + 1)) + '</label>' +
-            '<input class="language-input" id="language-' + review.id + '" data-field="originalLanguage" data-id="' + review.id + '" value="' + escapeHtml(review.originalLanguage) + '" placeholder="Enter original language" ' + (review.type !== "Foreign word" ? "disabled" : "") + '>' +
-            '<label class="sr-only" for="within-sentence-' + review.id + '">Within sentence for ' + escapeHtml(review.word || "word " + (index + 1)) + '</label>' +
-            '<select class="within-sentence-select" id="within-sentence-' + review.id + '" data-field="withinSentence" data-id="' + review.id + '"><option value="No" ' + (review.withinSentence === "No" ? "selected" : "") + '>No</option><option value="Yes" ' + (review.withinSentence === "Yes" ? "selected" : "") + '>Yes</option><option value="N/A" ' + (review.withinSentence === "N/A" ? "selected" : "") + '>N/A (already a full sentence)</option></select>' +
-            '<button class="remove-button" type="button" data-remove-pair="' + review.pairId + '" ' + (new Set(reviews.map(function (item) { return item.pairId; })).size === 1 ? "disabled" : "") + ' aria-label="Remove both versions of this word">×</button>' +
+            '<input class="language-input" id="language-' + review.id + '" data-field="originalLanguage" data-id="' + review.id + '" value="' + (review.type === "Foreign word" ? escapeHtml(review.originalLanguage) : "N/A") + '" placeholder="Enter original language" ' + (review.custom && review.type === "Foreign word" ? "" : "disabled") + '>' +
+            '<span class="sr-only">Placement for ' + escapeHtml(review.word || "word " + (index + 1)) + '</span><span class="context-badge word-row-placement">' + escapeHtml(placementLabel(review.withinSentence)) + '</span>' +
+            '<button class="remove-button" type="button" data-remove="' + review.id + '" ' + (reviews.length === 1 ? "disabled" : "") + ' aria-label="Remove this row (' + escapeHtml(placementLabel(review.withinSentence)) + ') for ' + escapeHtml(review.word || "word " + (index + 1)) + '">×</button>' +
             (wordError ? '<span class="inline-error">' + escapeHtml(errors[review.id]) + '</span>' : "") +
           '</div>';
         }).join("");
@@ -724,23 +750,26 @@
 
       function renderChoiceTable(tableId, options, field) {
         const area = field === "pronunciation" ? "pronunciation" : field === "spellingApplicability" ? "spelling" : "consistency";
-        const head = '<thead><tr><th class="word-column">Word</th><th class="context-column">Within sentence</th>' + options.map(function (option) { return '<th>' + option + '</th>'; }).join("") + '</tr></thead>';
+        const lockable = field === "spellingApplicability" || field === "consistency";
+        const head = '<thead><tr><th class="word-column">Word</th><th class="context-column">Placement</th>' + options.map(function (option) { return '<th>' + option + '</th>'; }).join("") + '</tr></thead>';
         const body = '<tbody>' + reviews.map(function (review) {
           const invalid = errorArea(errors[review.id]) === area;
-          return '<tr class="' + (invalid ? "invalid" : "") + '"><th>' + wordName(review) + tableError(review, area) + '</th><td class="context-column"><span class="context-badge">' + escapeHtml(review.withinSentence) + '</span></td>' + options.map(function (option) {
-            return '<td><label class="choice"><input type="radio" name="' + field + '-' + review.id + '" data-choice="' + field + '" data-id="' + review.id + '" value="' + escapeHtml(option) + '" ' + (review[field] === option ? "checked" : "") + '><span></span></label></td>';
+          const locked = lockable && isExtremePronunciation(review.pronunciation);
+          return '<tr class="' + (invalid ? "invalid" : "") + (locked ? " na-locked" : "") + '"><th>' + wordName(review) + tableError(review, area) + '</th><td class="context-column"><span class="context-badge">' + escapeHtml(placementLabel(review.withinSentence)) + '</span></td>' + options.map(function (option) {
+            return '<td><label class="choice"><input type="radio" name="' + field + '-' + review.id + '" data-choice="' + field + '" data-id="' + review.id + '" value="' + escapeHtml(option) + '" ' + (review[field] === option ? "checked" : "") + ' ' + (locked ? "disabled" : "") + '><span></span></label></td>';
           }).join("") + '</tr>';
         }).join("") + '</tbody>';
         document.getElementById(tableId).innerHTML = head + body;
       }
 
       function renderMethodTable() {
-        const head = '<thead><tr><th class="word-column">Word</th><th class="context-column">Within sentence</th>' + methodOptions.map(function (option) { return '<th>' + option + '</th>'; }).join("") + '<th>Other</th><th>Attempts to acceptable pronunciation</th><th>Time spent (minutes)</th></tr></thead>';
+        const head = '<thead><tr><th class="word-column">Word</th><th class="context-column">Placement</th>' + methodOptions.map(function (option) { return '<th>' + option + '</th>'; }).join("") + '<th>Other</th><th>Attempts to acceptable pronunciation</th><th>Time spent (minutes)</th></tr></thead>';
         const body = '<tbody>' + reviews.map(function (review) {
           const invalid = errorArea(errors[review.id]) === "methods";
-          const exclusiveSelected = review.methods.some(function (method) { return exclusiveMethods.indexOf(method) !== -1; });
-          return '<tr class="' + (invalid ? "invalid" : "") + '"><th>' + wordName(review) + tableError(review, "methods") + '</th><td class="context-column"><span class="context-badge">' + escapeHtml(review.withinSentence) + '</span></td>' + methodOptions.map(function (option) {
-            const disabled = exclusiveSelected && review.methods.indexOf(option) === -1;
+          const locked = isExtremePronunciation(review.pronunciation);
+          const exclusiveSelected = locked || review.methods.some(function (method) { return exclusiveMethods.indexOf(method) !== -1; });
+          return '<tr class="' + (invalid ? "invalid" : "") + (locked ? " na-locked" : "") + '"><th>' + wordName(review) + tableError(review, "methods") + '</th><td class="context-column"><span class="context-badge">' + escapeHtml(placementLabel(review.withinSentence)) + '</span></td>' + methodOptions.map(function (option) {
+            const disabled = locked || (exclusiveSelected && review.methods.indexOf(option) === -1);
             return '<td><label class="choice checkbox"><input type="checkbox" data-method="' + escapeHtml(option) + '" data-id="' + review.id + '" ' + (review.methods.indexOf(option) !== -1 ? "checked" : "") + ' ' + (disabled ? "disabled" : "") + '><span></span></label></td>';
           }).join("") +
             '<td><label><span class="sr-only">Other method for ' + wordName(review) + '</span><input class="other-input" data-field="other" data-id="' + review.id + '" value="' + escapeHtml(review.other) + '" placeholder="Type here" ' + (exclusiveSelected ? "disabled" : "") + '></label></td>' +
@@ -751,8 +780,8 @@
       }
 
       function renderNotesTable() {
-        document.getElementById("notes-table").innerHTML = '<thead><tr><th class="word-column">Word</th><th class="context-column">Within sentence</th><th>Notes or comments</th></tr></thead><tbody>' + reviews.map(function (review) {
-          return '<tr><th>' + wordName(review) + '</th><td class="context-column"><span class="context-badge">' + escapeHtml(review.withinSentence) + '</span></td><td><label><span class="sr-only">Notes for ' + wordName(review) + '</span><textarea data-field="notes" data-id="' + review.id + '" placeholder="Add context, observations or follow-up notes…">' + escapeHtml(review.notes) + '</textarea></label></td></tr>';
+        document.getElementById("notes-table").innerHTML = '<thead><tr><th class="word-column">Word</th><th class="context-column">Placement</th><th>Notes or comments</th></tr></thead><tbody>' + reviews.map(function (review) {
+          return '<tr><th>' + wordName(review) + '</th><td class="context-column"><span class="context-badge">' + escapeHtml(placementLabel(review.withinSentence)) + '</span></td><td><label><span class="sr-only">Notes for ' + wordName(review) + '</span><textarea data-field="notes" data-id="' + review.id + '" placeholder="Add context, observations or follow-up notes…">' + escapeHtml(review.notes) + '</textarea></label></td></tr>';
         }).join("") + '</tbody>';
       }
 
@@ -784,7 +813,7 @@
         const voiceList = languageVoiceLists[language] || [];
         const words = (languageWordLists[language] || []).concat(language && language !== "English US" ? allNonEnglishWords : []);
         voices = voiceList.length ? voiceList.map(function (item) { return newVoice(item.name, item.ovLanguage, item.gender); }) : [newVoice("", language, "")];
-        reviews = words.length ? words.reduce(function (all, item) { return all.concat(newReviewEntry(item)); }, []) : newReviewPair({ word: "", type: "", originalLanguage: "" });
+        reviews = words.length ? words.reduce(function (all, item) { return all.concat(newReviewEntry(item, false)); }, []) : newReviewPair({ word: "", type: "", originalLanguage: "" }, true);
         voiceErrors = {};
         errors = {};
         document.getElementById("email-panel").hidden = true;
@@ -812,7 +841,14 @@
         const voiceInput = event.target.closest("[data-voice-field]");
         if (voiceInput) updateVoice(voiceInput.dataset.voiceId, voiceInput.dataset.voiceField, voiceInput.value, true);
         const voiceChoice = event.target.closest("[data-voice-choice]");
-        if (voiceChoice) updateVoice(voiceChoice.dataset.voiceId, voiceChoice.dataset.voiceChoice, voiceChoice.value, true);
+        if (voiceChoice) {
+          const field = voiceChoice.dataset.voiceChoice;
+          updateVoice(voiceChoice.dataset.voiceId, field, voiceChoice.value, false);
+          if ((field === "voiceMatch" || field === "distinctness") && voiceChoice.value === "Not available: The tool does not provide this feature.") {
+            voices.forEach(function (voice) { voice[field] = "Not available: The tool does not provide this feature."; });
+          }
+          renderVoices();
+        }
         const voicePerformance = event.target.closest("[data-voice-performance]");
         if (voicePerformance) {
           const voice = voices.find(function (item) { return item.id === voicePerformance.dataset.voiceId; });
@@ -837,19 +873,37 @@
             reviews.filter(function (item) { return item.pairId === review.pairId; }).forEach(function (item) { item.originalLanguage = ""; });
           }
           updateReview(fieldInput.dataset.id, "type", fieldInput.value, true);
-        } else if (fieldInput && fieldInput.dataset.field === "withinSentence") {
-          const review = reviews.find(function (item) { return item.id === fieldInput.dataset.id; });
-          if (review) {
-            review.withinSentence = fieldInput.value;
-            const pairedReview = reviews.find(function (item) { return item.pairId === review.pairId && item.id !== review.id; });
-            if (pairedReview) pairedReview.withinSentence = fieldInput.value === "Yes" ? "No" : "Yes";
-          }
-          render();
         } else if (fieldInput && (fieldInput.dataset.field === "word" || fieldInput.dataset.field === "originalLanguage")) {
           render();
         }
         const choice = event.target.closest("[data-choice]");
-        if (choice) updateReview(choice.dataset.id, choice.dataset.choice, choice.value, true);
+        if (choice && choice.dataset.choice === "pronunciation") {
+          const review = reviews.find(function (item) { return item.id === choice.dataset.id; });
+          if (review) {
+            const wasExtreme = isExtremePronunciation(review.pronunciation);
+            review.pronunciation = choice.value;
+            delete errors[review.id];
+            const nowExtreme = isExtremePronunciation(review.pronunciation);
+            if (nowExtreme) {
+              review.methods = ["N/A"];
+              review.other = "";
+              review.attempts = "";
+              review.timeMinutes = "";
+              review.spellingApplicability = "N/A";
+              review.consistency = "N/A";
+            } else if (wasExtreme) {
+              review.methods = [];
+              review.other = "";
+              review.attempts = "";
+              review.timeMinutes = "";
+              review.spellingApplicability = "";
+              review.consistency = "";
+            }
+            render();
+          }
+        } else if (choice) {
+          updateReview(choice.dataset.id, choice.dataset.choice, choice.value, true);
+        }
         const method = event.target.closest("[data-method]");
         if (method) {
           const review = reviews.find(function (item) { return item.id === method.dataset.id; });
@@ -877,11 +931,6 @@
           delete voiceErrors[removeVoice.dataset.removeVoice];
           renderVoices();
         }
-        const removePair = event.target.closest("[data-remove-pair]");
-        if (removePair) {
-          reviews = reviews.filter(function (review) { return review.pairId !== removePair.dataset.removePair; });
-          render();
-        }
         const remove = event.target.closest("[data-remove]");
         if (remove) { reviews = reviews.filter(function (review) { return review.id !== remove.dataset.remove; }); render(); }
       });
@@ -902,7 +951,7 @@
       });
 
       document.getElementById("add-word").addEventListener("click", function () {
-        reviews = reviews.concat(newReviewPair({ word: "", type: "", originalLanguage: "" }));
+        reviews = reviews.concat(newReviewPair({ word: "", type: "", originalLanguage: "" }, true));
         render();
         const inputs = document.querySelectorAll(".word-input");
         inputs[inputs.length - 2].focus();
@@ -950,7 +999,7 @@
           rows.push(["custom_voice_support", submission.id, submission.createdAt, submission.language, submission.service, submission.tool, voice.name, voice.ovLanguage, voice.gender, voice.performanceStyles.join("; "), voice.performanceOther, voice.versatility, voice.voiceMatch, voice.distinctness, voice.notes, "", "", "", "", "", "", "", "", "", "", "", ""]);
         });
         submission.reviews.forEach(function (review) {
-          rows.push(["pronunciation", submission.id, submission.createdAt, submission.language, submission.service, submission.tool, "", "", "", "", "", "", "", "", "", review.word, review.type, review.originalLanguage, review.withinSentence, review.pronunciation, review.methods.join("; "), review.other, review.attempts, review.timeMinutes, review.spellingApplicability, review.consistency, review.notes]);
+          rows.push(["pronunciation", submission.id, submission.createdAt, submission.language, submission.service, submission.tool, "", "", "", "", "", "", "", "", "", review.word, review.type, (review.type === "Foreign word" ? review.originalLanguage : "N/A"), review.withinSentence, review.pronunciation, review.methods.join("; "), review.other, review.attempts, review.timeMinutes, review.spellingApplicability, review.consistency, review.notes]);
         });
         const csv = "\uFEFF" + rows.map(function (row) { return row.map(csvCell).join(","); }).join("\n");
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
